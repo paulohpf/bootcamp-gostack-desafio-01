@@ -1,109 +1,84 @@
-const express = require('express');
+const express = require("express");
 
 const server = express();
-
 server.use(express.json());
 
-/**
- * A variável `projects` pode ser `const` porque um `array`
- * pode receber adições ou exclusões mesmo sendo uma constante.
- */
-const projects = [];
-
-/**
- * Middleware que checa se o projeto existe
- */
-function checkProjectExists(req, res, next) {
-  const { id } = req.params;
-  const project = projects.find(p => p.id == id);
-
-  if (!project) {
-    return res.status(400).json({ error: 'Project not found' });
+const projects = [
+  {
+    id: 1,
+    title: "Novo Projeto 1",
+    tasks: ["Nova Tarefa"]
   }
+];
+
+let reqTimes = 0;
+
+//Middleware Global de log
+server.use((req, res, next) => {
+  console.log(reqTimes++);
+
+  next();
+});
+
+const checkProjectsInArray = (req, res, next) => {
+  const project = projects[req.params.index];
+
+  if (!project)
+    return res.status(400).json({ message: "Project does not exists" });
+
+  req.project = project;
 
   return next();
-}
+};
 
-/**
- * Middleware que dá log no número de requisições
- */
-function logRequests(req, res, next) {
-
-  console.count("Número de requisições");
-
-  return next();
-}
-
-server.use(logRequests);
-
-/**
- * Retorna todos os projetos
- */
-server.get('/projects', (req, res) => {
+server.get("/projects", (req, res) => {
   return res.json(projects);
 });
 
-/**
- * Request body: id, title
- * Cadastra um novo projeto
- */
-server.post('/projects', (req, res) => {
+server.get("/projects/:index", checkProjectsInArray, (req, res) => {
+  return res.json(req.project);
+});
+
+server.post("/projects", (req, res) => {
   const { id, title } = req.body;
 
-  const project = {
+  const newProject = {
     id,
     title,
     tasks: []
   };
 
-  projects.push(project);
+  projects.push(newProject);
 
-  return res.json(project);
+  return res.json(projects);
 });
 
-/**
- * Route params: id
- * Request body: title
- * Altera o título do projeto com o id presente nos parâmetros da rota.
- */
-server.put('/projects/:id', checkProjectExists, (req, res) => {
-  const { id } = req.params;
+server.put("/projects/:index", (req, res) => {
+  const { index } = req.params;
   const { title } = req.body;
 
-  const project = projects.find(p => p.id == id);
+  projects[index].title = title;
 
-  project.title = title;
-
-  return res.json(project);
+  return res.json(projects);
 });
 
-/**
- * Route params: id
- * Deleta o projeto associado ao id presente nos parâmetros da rota.
- */
-server.delete('/projects/:id', checkProjectExists, (req, res) => {
-  const { id } = req.params;
+server.delete("/projects/:index", checkProjectsInArray, (req, res) => {
+  const { index } = req.params;
 
-  const projectIndex = projects.findIndex(p => p.id == id);
-
-  projects.splice(projectIndex, 1);
+  projects.splice(index, 1);
 
   return res.send();
 });
 
-/**
- * Route params: id;
- * Adiciona uma nova tarefa no projeto escolhido via id; 
- */
-server.post('/projects/:id/tasks', checkProjectExists, (req, res) => {
-  const { id } = req.params;
+server.post("/projects/:index/tasks", checkProjectsInArray, (req, res) => {
+  const { index } = req.params;
   const { title } = req.body;
 
-  const project = projects.find(p => p.id == id);
+  projects[index].tasks.push(title);
 
-  project.tasks.push(title);
-
-  return res.json(project);
+  return res.json(projects);
 });
 
-server.listen(4000);
+//Escuta na porta 3000
+//localhost:3000
+server.listen(3000);

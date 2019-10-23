@@ -28,6 +28,10 @@
   <a href="#memo-licença">Licença</a>
 </p>
 
+## Para execução
+
+Para executar basta baixar as dependencias com o npm ou yarn e executar npm start ou yarn start
+
 ## :rocket: Sobre o desafio
 
 Crie uma aplicação para armazenar projetos e suas tarefas do zero utilizando [Express](https://expressjs.com/pt-br/).
